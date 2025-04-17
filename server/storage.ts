@@ -4,6 +4,8 @@ import {
   courses, Course, InsertCourse,
   attendances, Attendance, InsertAttendance
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -247,112 +249,335 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
 
-// Initialize with sample data
-(async () => {
-  // Create some courses
-  const cs101 = await storage.createCourse({
-    code: "CS101",
-    name: "Computer Science 101",
-    instructorId: 1,
-    room: "Room 305B",
-    schedule: "Monday, Wednesday 2:30 PM",
-    totalStudents: 35
-  });
-  
-  const dataStructures = await storage.createCourse({
-    code: "CS201",
-    name: "Data Structures",
-    instructorId: 1,
-    room: "Lab 201",
-    schedule: "Tuesday, Thursday 10:15 AM",
-    totalStudents: 28
-  });
-  
-  const database = await storage.createCourse({
-    code: "CS301",
-    name: "Database Systems",
-    instructorId: 1,
-    room: "Room 112A",
-    schedule: "Wednesday, Friday 11:05 AM",
-    totalStudents: 42
-  });
-  
-  const ai = await storage.createCourse({
-    code: "CS401",
-    name: "Artificial Intelligence",
-    instructorId: 1,
-    room: "Room 202C",
-    schedule: "Monday, Thursday 1:30 PM",
-    totalStudents: 30
-  });
-  
-  // Create some students
-  const michael = await storage.createStudent({
-    name: "Michael Roberts",
-    studentId: "S12345",
-    email: "michael.roberts@example.com",
-    courses: ["CS101", "CS201"],
-    faceDescriptor: null
-  });
-  
-  const sarah = await storage.createStudent({
-    name: "Sarah Johnson",
-    studentId: "S12346",
-    email: "sarah.johnson@example.com",
-    courses: ["CS101", "CS301"],
-    faceDescriptor: null
-  });
-  
-  const david = await storage.createStudent({
-    name: "David Wilson",
-    studentId: "S12347",
-    email: "david.wilson@example.com",
-    courses: ["CS201", "CS301"],
-    faceDescriptor: null
-  });
-  
-  const emily = await storage.createStudent({
-    name: "Emily Chen",
-    studentId: "S12348",
-    email: "emily.chen@example.com",
-    courses: ["CS101", "CS401"],
-    faceDescriptor: null
-  });
-  
-  // Create some attendance records
-  const today = new Date();
-  
-  await storage.createAttendance({
-    studentId: michael.id,
-    courseId: cs101.id,
-    date: new Date(today.setHours(9, 30)),
-    status: "present",
-    verificationMethod: "face"
-  });
-  
-  await storage.createAttendance({
-    studentId: sarah.id,
-    courseId: dataStructures.id,
-    date: new Date(today.setHours(10, 15)),
-    status: "present",
-    verificationMethod: "face"
-  });
-  
-  await storage.createAttendance({
-    studentId: david.id,
-    courseId: database.id,
-    date: new Date(today.setHours(11, 5)),
-    status: "absent",
-    verificationMethod: "manual"
-  });
-  
-  await storage.createAttendance({
-    studentId: emily.id,
-    courseId: ai.id,
-    date: new Date(today.setHours(13, 30)),
-    status: "late",
-    verificationMethod: "face"
-  });
-})();
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  async updateUserLanguage(userId: number, language: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ language })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  // Student methods
+  async createStudent(insertStudent: InsertStudent): Promise<Student> {
+    const [student] = await db.insert(students).values(insertStudent).returning();
+    
+    // Update course total students if necessary
+    if (student.courses && student.courses.length > 0) {
+      for (const courseCode of student.courses) {
+        const [course] = await db
+          .select()
+          .from(courses)
+          .where(eq(courses.code, courseCode));
+        
+        if (course) {
+          await db
+            .update(courses)
+            .set({ totalStudents: (course.totalStudents || 0) + 1 })
+            .where(eq(courses.id, course.id));
+        }
+      }
+    }
+    
+    return student;
+  }
+
+  async getStudent(id: number): Promise<Student | undefined> {
+    const [student] = await db.select().from(students).where(eq(students.id, id));
+    return student;
+  }
+
+  async getStudentByStudentId(studentId: string): Promise<Student | undefined> {
+    const [student] = await db
+      .select()
+      .from(students)
+      .where(eq(students.studentId, studentId));
+    return student;
+  }
+
+  async updateStudent(id: number, student: Partial<InsertStudent>): Promise<Student | undefined> {
+    const [updated] = await db
+      .update(students)
+      .set(student)
+      .where(eq(students.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteStudent(id: number): Promise<boolean> {
+    const result = await db.delete(students).where(eq(students.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getAllStudents(): Promise<Student[]> {
+    return await db.select().from(students);
+  }
+
+  async getStudentsByCourse(courseId: number): Promise<Student[]> {
+    const [course] = await db.select().from(courses).where(eq(courses.id, courseId));
+    if (!course) return [];
+    
+    // This is a simplification - ideally we'd have a proper many-to-many relationship
+    // between students and courses rather than using a text array
+    return await db
+      .select()
+      .from(students)
+      .where(
+        // We're looking for students where the courses array includes the course code
+        students.courses.includes([course.code])
+      );
+  }
+
+  // Course methods
+  async createCourse(insertCourse: InsertCourse): Promise<Course> {
+    const [course] = await db.insert(courses).values(insertCourse).returning();
+    return course;
+  }
+
+  async getCourse(id: number): Promise<Course | undefined> {
+    const [course] = await db.select().from(courses).where(eq(courses.id, id));
+    return course;
+  }
+
+  async getAllCourses(): Promise<Course[]> {
+    return await db.select().from(courses);
+  }
+
+  async getCoursesByInstructor(instructorId: number): Promise<Course[]> {
+    return await db
+      .select()
+      .from(courses)
+      .where(eq(courses.instructorId, instructorId));
+  }
+
+  async updateCourse(id: number, course: Partial<InsertCourse>): Promise<Course | undefined> {
+    const [updated] = await db
+      .update(courses)
+      .set(course)
+      .where(eq(courses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCourse(id: number): Promise<boolean> {
+    const result = await db.delete(courses).where(eq(courses.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Attendance methods
+  async createAttendance(insertAttendance: InsertAttendance): Promise<Attendance> {
+    const [attendance] = await db.insert(attendances).values(insertAttendance).returning();
+    return attendance;
+  }
+
+  async getAttendance(id: number): Promise<Attendance | undefined> {
+    const [attendance] = await db.select().from(attendances).where(eq(attendances.id, id));
+    return attendance;
+  }
+
+  async getAttendancesByStudent(studentId: number): Promise<Attendance[]> {
+    return await db
+      .select()
+      .from(attendances)
+      .where(eq(attendances.studentId, studentId));
+  }
+
+  async getAttendancesByCourse(courseId: number): Promise<Attendance[]> {
+    return await db
+      .select()
+      .from(attendances)
+      .where(eq(attendances.courseId, courseId));
+  }
+
+  async getAttendancesByDate(courseId: number, date: Date): Promise<Attendance[]> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    return await db
+      .select()
+      .from(attendances)
+      .where(
+        and(
+          eq(attendances.courseId, courseId),
+          gte(attendances.date, startOfDay),
+          lte(attendances.date, endOfDay)
+        )
+      );
+  }
+
+  async getRecentAttendances(limit: number): Promise<(Attendance & { student: Student, course: Course })[]> {
+    const results = await db
+      .select({
+        attendance: attendances,
+        student: students,
+        course: courses
+      })
+      .from(attendances)
+      .innerJoin(students, eq(attendances.studentId, students.id))
+      .innerJoin(courses, eq(attendances.courseId, courses.id))
+      .orderBy(desc(attendances.date))
+      .limit(limit);
+    
+    return results.map(result => ({
+      ...result.attendance,
+      student: result.student,
+      course: result.course
+    }));
+  }
+}
+
+// Create and seed the database with initial data
+export const storage = new DatabaseStorage();
+
+// Initialize with sample data for development
+async function seedDatabase() {
+  try {
+    // Check if we already have users
+    const existingUsers = await db.select().from(users);
+    if (existingUsers.length > 0) {
+      console.log("Database already has data, skipping seed");
+      return;
+    }
+    
+    // Create default faculty user
+    const faculty = await storage.createUser({
+      username: "faculty",
+      password: "password",
+      name: "Prof. Jane Smith",
+      department: "Computer Science",
+      language: "en",
+    });
+    
+    // Create some courses
+    const cs101 = await storage.createCourse({
+      code: "CS101",
+      name: "Computer Science 101",
+      instructorId: faculty.id,
+      room: "Room 305B",
+      schedule: "Monday, Wednesday 2:30 PM",
+      totalStudents: 35
+    });
+    
+    const dataStructures = await storage.createCourse({
+      code: "CS201",
+      name: "Data Structures",
+      instructorId: faculty.id,
+      room: "Lab 201",
+      schedule: "Tuesday, Thursday 10:15 AM",
+      totalStudents: 28
+    });
+    
+    const database = await storage.createCourse({
+      code: "CS301",
+      name: "Database Systems",
+      instructorId: faculty.id,
+      room: "Room 112A",
+      schedule: "Wednesday, Friday 11:05 AM",
+      totalStudents: 42
+    });
+    
+    const ai = await storage.createCourse({
+      code: "CS401",
+      name: "Artificial Intelligence",
+      instructorId: faculty.id,
+      room: "Room 202C",
+      schedule: "Monday, Thursday 1:30 PM",
+      totalStudents: 30
+    });
+    
+    // Create some students
+    const michael = await storage.createStudent({
+      name: "Michael Roberts",
+      studentId: "S12345",
+      email: "michael.roberts@example.com",
+      courses: ["CS101", "CS201"],
+      faceDescriptor: null
+    });
+    
+    const sarah = await storage.createStudent({
+      name: "Sarah Johnson",
+      studentId: "S12346",
+      email: "sarah.johnson@example.com",
+      courses: ["CS101", "CS301"],
+      faceDescriptor: null
+    });
+    
+    const david = await storage.createStudent({
+      name: "David Wilson",
+      studentId: "S12347",
+      email: "david.wilson@example.com",
+      courses: ["CS201", "CS301"],
+      faceDescriptor: null
+    });
+    
+    const emily = await storage.createStudent({
+      name: "Emily Chen",
+      studentId: "S12348",
+      email: "emily.chen@example.com",
+      courses: ["CS101", "CS401"],
+      faceDescriptor: null
+    });
+    
+    // Create some attendance records
+    const today = new Date();
+    
+    await storage.createAttendance({
+      studentId: michael.id,
+      courseId: cs101.id,
+      date: new Date(today.setHours(9, 30)),
+      status: "present",
+      verificationMethod: "face"
+    });
+    
+    await storage.createAttendance({
+      studentId: sarah.id,
+      courseId: dataStructures.id,
+      date: new Date(today.setHours(10, 15)),
+      status: "present",
+      verificationMethod: "face"
+    });
+    
+    await storage.createAttendance({
+      studentId: david.id,
+      courseId: database.id,
+      date: new Date(today.setHours(11, 5)),
+      status: "absent",
+      verificationMethod: "manual"
+    });
+    
+    await storage.createAttendance({
+      studentId: emily.id,
+      courseId: ai.id,
+      date: new Date(today.setHours(13, 30)),
+      status: "late",
+      verificationMethod: "face"
+    });
+    
+    console.log("Database seeded with initial data");
+  } catch (error) {
+    console.error("Error seeding database:", error);
+  }
+}
+
+// Call the seed function to initialize data
+seedDatabase();

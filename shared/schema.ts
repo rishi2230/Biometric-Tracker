@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -18,6 +19,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
 });
+
+// The relationships are defined after all tables
 
 // Students
 export const students = pgTable("students", {
@@ -86,3 +89,32 @@ export const loginSchema = z.object({
 });
 
 export type LoginCredentials = z.infer<typeof loginSchema>;
+
+// Define relationships between tables
+export const usersRelations = relations(users, ({ many }) => ({
+  courses: many(courses, { relationName: "instructorCourses" }),
+}));
+
+export const studentsRelations = relations(students, ({ many }) => ({
+  attendances: many(attendances)
+}));
+
+export const coursesRelations = relations(courses, ({ one, many }) => ({
+  instructor: one(users, {
+    fields: [courses.instructorId],
+    references: [users.id],
+    relationName: "instructorCourses"
+  }),
+  attendances: many(attendances)
+}));
+
+export const attendancesRelations = relations(attendances, ({ one }) => ({
+  student: one(students, {
+    fields: [attendances.studentId],
+    references: [students.id]
+  }),
+  course: one(courses, {
+    fields: [attendances.courseId],
+    references: [courses.id]
+  })
+}));
