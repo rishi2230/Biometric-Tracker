@@ -322,8 +322,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteStudent(id: number): Promise<boolean> {
-    const result = await db.delete(students).where(eq(students.id, id));
-    return result.rowCount > 0;
+    try {
+      await db.delete(students).where(eq(students.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      return false;
+    }
   }
 
   async getAllStudents(): Promise<Student[]> {
@@ -336,13 +341,12 @@ export class DatabaseStorage implements IStorage {
     
     // This is a simplification - ideally we'd have a proper many-to-many relationship
     // between students and courses rather than using a text array
-    return await db
-      .select()
-      .from(students)
-      .where(
-        // We're looking for students where the courses array includes the course code
-        students.courses.includes([course.code])
-      );
+    const allStudents = await db.select().from(students);
+    
+    // Filter students manually where the courses array includes the course code
+    return allStudents.filter(student => 
+      student.courses && student.courses.includes(course.code)
+    );
   }
 
   // Course methods
@@ -413,36 +417,49 @@ export class DatabaseStorage implements IStorage {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
     
-    return await db
+    // Get all attendances for the course
+    const allAttendances = await db
       .select()
       .from(attendances)
-      .where(
-        and(
-          eq(attendances.courseId, courseId),
-          gte(attendances.date, startOfDay),
-          lte(attendances.date, endOfDay)
-        )
-      );
+      .where(eq(attendances.courseId, courseId));
+    
+    // Manually filter by date range
+    return allAttendances.filter(attendance => {
+      if (!attendance.date) return false;
+      return attendance.date >= startOfDay && attendance.date <= endOfDay;
+    });
   }
 
   async getRecentAttendances(limit: number): Promise<(Attendance & { student: Student, course: Course })[]> {
-    const results = await db
-      .select({
-        attendance: attendances,
-        student: students,
-        course: courses
-      })
-      .from(attendances)
-      .innerJoin(students, eq(attendances.studentId, students.id))
-      .innerJoin(courses, eq(attendances.courseId, courses.id))
-      .orderBy(desc(attendances.date))
-      .limit(limit);
+    // Get all attendances, students, and courses
+    const allAttendances = await db.select().from(attendances);
+    const allStudents = await db.select().from(students);
+    const allCourses = await db.select().from(courses);
     
-    return results.map(result => ({
-      ...result.attendance,
-      student: result.student,
-      course: result.course
-    }));
+    // Filter and sort attendances manually
+    const sortedAttendances = allAttendances
+      .filter(a => a.date !== null)
+      .sort((a, b) => {
+        if (!a.date || !b.date) return 0;
+        return b.date.getTime() - a.date.getTime();
+      })
+      .slice(0, limit);
+    
+    // Join with students and courses
+    return sortedAttendances.map(attendance => {
+      const student = allStudents.find(s => s.id === attendance.studentId);
+      const course = allCourses.find(c => c.id === attendance.courseId);
+      
+      if (!student || !course) {
+        throw new Error("Referenced student or course not found");
+      }
+      
+      return {
+        ...attendance,
+        student,
+        course
+      };
+    });
   }
 }
 
