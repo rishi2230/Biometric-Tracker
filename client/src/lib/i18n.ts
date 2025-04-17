@@ -128,9 +128,9 @@ const enTranslations = {
   addNewClass: "Add New Class",
   
   // Attendance
-  takeAttendance: "Take Attendance",
+  takeAttendanceBtn: "Take Attendance",
   selectCourse: "Select Course",
-  verificationMethod: "Verification Method",
+  verificationMethodType: "Verification Method",
   faceId: "Face ID",
   fingerprint: "Fingerprint",
   startScanning: "Start Scanning",
@@ -151,7 +151,7 @@ const enTranslations = {
   status: "Status",
   date: "Date",
   time: "Time",
-  verificationMethod: "Verification Method",
+  verificationMethodUsed: "Verification Method",
   student: "Student",
   course: "Course",
   manual: "Manual",
@@ -358,9 +358,9 @@ const esTranslations = {
   addNewClass: "Añadir nueva clase",
   
   // Attendance
-  takeAttendance: "Tomar asistencia",
+  takeAttendanceBtn: "Tomar asistencia",
   selectCourse: "Seleccionar curso",
-  verificationMethod: "Método de verificación",
+  verificationMethodType: "Método de verificación",
   faceId: "ID facial",
   fingerprint: "Huella digital",
   startScanning: "Comenzar escaneo",
@@ -381,7 +381,7 @@ const esTranslations = {
   status: "Estado",
   date: "Fecha",
   time: "Hora",
-  verificationMethod: "Método de verificación",
+  verificationMethodUsed: "Método de verificación",
   student: "Estudiante",
   course: "Curso",
   manual: "Manual",
@@ -588,9 +588,9 @@ const frTranslations = {
   addNewClass: "Ajouter une nouvelle classe",
   
   // Attendance
-  takeAttendance: "Prendre les présences",
+  takeAttendanceBtn: "Prendre les présences",
   selectCourse: "Sélectionner un cours",
-  verificationMethod: "Méthode de vérification",
+  verificationMethodType: "Méthode de vérification",
   faceId: "ID facial",
   fingerprint: "Empreinte digitale",
   startScanning: "Commencer à scanner",
@@ -611,7 +611,7 @@ const frTranslations = {
   status: "Statut",
   date: "Date",
   time: "Heure",
-  verificationMethod: "Méthode de vérification",
+  verificationMethodUsed: "Méthode de vérification",
   student: "Étudiant",
   course: "Cours",
   manual: "Manuel",
@@ -818,10 +818,10 @@ const arTranslations = {
   addNewClass: "إضافة فصل جديد",
   
   // Attendance
-  takeAttendance: "تسجيل الحضور",
+  takeAttendanceBtn: "تسجيل الحضور",
   selectCourse: "اختر الدورة",
-  verificationMethod: "طريقة التحقق",
-  faceId: "معرف الوجه",
+  verificationMethodType: "طريقة التحقق",
+  faceId: "التعرف على الوجه",
   fingerprint: "بصمة الإصبع",
   startScanning: "بدء المسح",
   faceDetected: "تم اكتشاف الوجه",
@@ -829,23 +829,23 @@ const arTranslations = {
   facePositioned: "تم وضع الوجه بشكل صحيح",
   startCamera: "انقر لبدء الكاميرا",
   takePicture: "التقاط صورة",
-  processing: "جارٍ المعالجة...",
+  processing: "جاري المعالجة...",
   attendanceRecorded: "تم تسجيل الحضور بنجاح",
-  manualAttendance: "الحضور اليدوي",
-  markPresent: "تحديد حاضر",
-  markAbsent: "تحديد غائب",
-  markLate: "تحديد متأخر",
-  selectStudentsFirst: "الرجاء تحديد الطلاب أولاً",
+  manualAttendance: "حضور يدوي",
+  markPresent: "تسجيل حاضر",
+  markAbsent: "تسجيل غائب",
+  markLate: "تسجيل متأخر",
+  selectStudentsFirst: "الرجاء اختيار الطلاب أولاً",
   noCoursSelected: "لم يتم اختيار دورة",
   selectCourseToManageAttendance: "اختر دورة من اليسار لإدارة الحضور",
   status: "الحالة",
   date: "التاريخ",
   time: "الوقت",
-  verificationMethod: "طريقة التحقق",
+  verificationMethodUsed: "طريقة التحقق",
   student: "الطالب",
   course: "الدورة",
   manual: "يدوي",
-  fingerPrintNotImplemented: "التحقق من بصمة الإصبع غير مطبق في هذا الإصدار",
+  fingerPrintNotImplemented: "لم يتم تنفيذ التحقق ببصمة الإصبع في هذه النسخة",
   selectCourseToViewAttendance: "اختر دورة لعرض الحضور",
   todaysStatus: "حالة اليوم",
   unknown: "غير معروف",
@@ -859,7 +859,7 @@ const arTranslations = {
   viewAndExportAttendanceData: "عرض وتصدير بيانات الحضور",
   noDataToDisplay: "لا توجد بيانات للعرض",
   selectCourseToViewReports: "اختر دورة لعرض تقارير الحضور",
-  exportCSV: "تصدير بتنسيق CSV",
+  exportCSV: "تصدير CSV",
   chartType: "نوع الرسم البياني",
   selectChartType: "اختر نوع الرسم البياني",
   barChart: "رسم بياني شريطي",
@@ -891,11 +891,11 @@ const arTranslations = {
   chooseYourPreferredLanguage: "اختر لغتك المفضلة",
   manageYourNotificationPreferences: "إدارة تفضيلات الإشعارات الخاصة بك",
   emailNotifications: "إشعارات البريد الإلكتروني",
-  receiveEmailNotifications: "تلقي الإشعارات عبر البريد الإلكتروني",
+  receiveEmailNotifications: "استلام إشعارات عبر البريد الإلكتروني",
   attendanceAlerts: "تنبيهات الحضور",
-  receiveAttendanceAlerts: "الحصول على تنبيهات لأنماط الحضور غير العادية",
+  receiveAttendanceAlerts: "استلام تنبيهات لأنماط الحضور غير العادية",
   reportNotifications: "إشعارات التقارير",
-  receiveReportNotifications: "الحصول على إشعارات عند إنشاء التقارير",
+  receiveReportNotifications: "استلام إشعارات عند إنشاء التقارير",
   savePreferences: "حفظ التفضيلات",
   profileUpdated: "تم تحديث الملف الشخصي بنجاح",
   passwordUpdated: "تم تحديث كلمة المرور بنجاح",
@@ -922,27 +922,19 @@ const arTranslations = {
   success: "نجاح",
 };
 
-// Initialize i18next
+// Setup i18next with the translations
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    resources: {
+      en: { translation: enTranslations },
+      es: { translation: esTranslations },
+      fr: { translation: frTranslations },
+      ar: { translation: arTranslations },
+    },
     fallbackLng: "en",
     debug: false,
-    resources: {
-      en: {
-        translation: enTranslations,
-      },
-      es: {
-        translation: esTranslations,
-      },
-      fr: {
-        translation: frTranslations,
-      },
-      ar: {
-        translation: arTranslations,
-      },
-    },
     interpolation: {
       escapeValue: false,
     },

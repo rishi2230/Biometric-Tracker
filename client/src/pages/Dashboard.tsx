@@ -20,7 +20,7 @@ export default function Dashboard() {
         <div className="flex space-x-3">
           <Button onClick={() => setAttendanceModalOpen(true)}>
             <Plus className="h-5 w-5 mr-2" />
-            {t("takeAttendance")}
+            {t("takeAttendanceBtn")}
           </Button>
         </div>
       </div>

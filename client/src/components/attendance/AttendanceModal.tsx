@@ -49,7 +49,7 @@ export default function AttendanceModal({ open, onClose }: AttendanceModalProps)
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("takeAttendance")}</DialogTitle>
+          <DialogTitle>{t("takeAttendanceBtn")}</DialogTitle>
         </DialogHeader>
         
         {!showFaceRecognition ? (
@@ -74,7 +74,7 @@ export default function AttendanceModal({ open, onClose }: AttendanceModalProps)
 
             <div className="mb-5">
               <Label className="block text-sm font-medium text-gray-700 mb-1">
-                {t("verificationMethod")}
+                {t("verificationMethodType")}
               </Label>
               <div className="grid grid-cols-2 gap-3">
                 <Button
