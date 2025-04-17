@@ -36,6 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const userData = await response.json();
         setUser(userData);
       } else {
+        console.log("Not authenticated, showing login page");
         setUser(null);
       }
     } catch (error) {
@@ -48,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
+      console.log("Attempting login with:", credentials.username);
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
@@ -62,6 +64,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const userData = await response.json();
+      console.log("Login successful, user data:", userData);
       setUser(userData);
     } catch (error) {
       console.error("Login error:", error);
@@ -81,6 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    console.log("Auth provider mounted, checking authentication...");
     checkAuth();
   }, [checkAuth]);
 

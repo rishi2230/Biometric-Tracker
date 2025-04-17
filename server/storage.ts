@@ -83,7 +83,14 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id, createdAt: new Date() };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      createdAt: new Date(), 
+      department: insertUser.department ?? null, 
+      profileImage: insertUser.profileImage ?? null, 
+      language: insertUser.language ?? null 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -100,7 +107,14 @@ export class MemStorage implements IStorage {
   // Student methods
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
     const id = this.currentStudentId++;
-    const student: Student = { ...insertStudent, id, createdAt: new Date() };
+    const student: Student = { 
+      ...insertStudent, 
+      id, 
+      createdAt: new Date(), 
+      email: insertStudent.email ?? null, 
+      faceDescriptor: insertStudent.faceDescriptor ?? null, 
+      courses: insertStudent.courses ?? null 
+    };
     this.students.set(id, student);
     
     // Update course total students
@@ -156,7 +170,14 @@ export class MemStorage implements IStorage {
   // Course methods
   async createCourse(insertCourse: InsertCourse): Promise<Course> {
     const id = this.currentCourseId++;
-    const course: Course = { ...insertCourse, id, createdAt: new Date() };
+    const course: Course = { 
+      ...insertCourse, 
+      id, 
+      createdAt: new Date(), 
+      room: insertCourse.room ?? null, 
+      schedule: insertCourse.schedule ?? null, 
+      totalStudents: insertCourse.totalStudents ?? null 
+    };
     this.courses.set(id, course);
     return course;
   }
@@ -191,7 +212,7 @@ export class MemStorage implements IStorage {
   // Attendance methods
   async createAttendance(insertAttendance: InsertAttendance): Promise<Attendance> {
     const id = this.currentAttendanceId++;
-    const attendance: Attendance = { ...insertAttendance, id };
+    const attendance: Attendance = { ...insertAttendance, id, date: insertAttendance.date ?? null };
     this.attendances.set(id, attendance);
     return attendance;
   }
@@ -222,14 +243,21 @@ export class MemStorage implements IStorage {
     return Array.from(this.attendances.values()).filter(
       attendance => 
         attendance.courseId === courseId && 
+        attendance.date !== null && 
+        attendance.date !== undefined && 
         attendance.date >= startOfDay && 
         attendance.date <= endOfDay
     );
-  }
+}
+
 
   async getRecentAttendances(limit: number): Promise<(Attendance & { student: Student, course: Course })[]> {
     const allAttendances = Array.from(this.attendances.values())
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .sort((a, b) => {
+        const dateA = a.date ? new Date(a.date).getTime() : 0;
+        const dateB = b.date ? new Date(b.date).getTime() : 0;
+        return dateB - dateA;
+      })
       .slice(0, limit);
     
     return allAttendances.map(attendance => {

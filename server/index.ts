@@ -1,6 +1,17 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import pg from "pg"; // Updated import for pg
+const { Pool } = pg; // Destructure Pool from pg
+
+// Set up your database connection (this is just an example)
+const pool = new Pool({
+  user: 'your_user',
+  host: 'localhost',
+  database: 'your_database',
+  password: 'your_password',
+  port: 5432,
+});
 
 const app = express();
 app.use(express.json());
@@ -60,11 +71,9 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+
+  // Fix: Updated listen method to use 127.0.0.1 instead of 0.0.0.0
+  server.listen(port, '127.0.0.1', () => {
+    log(`serving on http://127.0.0.1:${port}`);
   });
 })();
